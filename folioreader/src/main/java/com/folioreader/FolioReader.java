@@ -41,6 +41,7 @@ public class FolioReader {
 
     public static final String EXTRA_BOOK_ID = "com.folioreader.extra.BOOK_ID";
     public static final String EXTRA_READ_LOCATOR = "com.folioreader.extra.READ_LOCATOR";
+    public static final String EXTRA_TEXT_SELECTED = "com.folioreader.extra.EXTRA_TEXT_SELECTED";
     public static final String EXTRA_PORT_NUMBER = "com.folioreader.extra.PORT_NUMBER";
     public static final String ACTION_SAVE_READ_LOCATOR = "com.folioreader.action.SAVE_READ_LOCATOR";
     public static final String ACTION_CLOSE_FOLIOREADER = "com.folioreader.action.CLOSE_FOLIOREADER";
@@ -53,6 +54,8 @@ public class FolioReader {
     private OnHighlightListener onHighlightListener;
     private ReadLocatorListener readLocatorListener;
     private OnClosedListener onClosedListener;
+
+    private OnSelectedListener onSelectedListener;
     private ReadLocator readLocator;
 
     @Nullable
@@ -68,6 +71,11 @@ public class FolioReader {
          * an epub again from your application.
          */
         void onFolioReaderClosed();
+    }
+
+
+    public interface OnSelectedListener {
+        void onSelectedListener(String data);
     }
 
     private BroadcastReceiver highlightReceiver = new BroadcastReceiver() {
@@ -101,6 +109,17 @@ public class FolioReader {
         }
     };
 
+
+    private BroadcastReceiver selectedText = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String data =
+                    (String) intent.getSerializableExtra(FolioReader.EXTRA_TEXT_SELECTED);
+            if (onSelectedListener != null)
+                onSelectedListener.onSelectedListener(data);
+        }
+    };
+
     public static FolioReader get() {
 
         if (singleton == null) {
@@ -128,8 +147,12 @@ public class FolioReader {
                 new IntentFilter(HighlightImpl.BROADCAST_EVENT));
         localBroadcastManager.registerReceiver(readLocatorReceiver,
                 new IntentFilter(ACTION_SAVE_READ_LOCATOR));
+        localBroadcastManager.registerReceiver(selectedText,
+                new IntentFilter(EXTRA_TEXT_SELECTED));
         localBroadcastManager.registerReceiver(closedReceiver,
                 new IntentFilter(ACTION_FOLIOREADER_CLOSED));
+        localBroadcastManager.registerReceiver(highlightReceiver,
+                new IntentFilter(HighlightImpl.BROADCAST_EVENT));
     }
 
     public FolioReader openBook(String assetOrSdcardPath) {
@@ -235,6 +258,11 @@ public class FolioReader {
         return singleton;
     }
 
+    public FolioReader setOnSelectedListener(OnSelectedListener onSelectedListener) {
+        this.onSelectedListener = onSelectedListener;
+        return singleton;
+    }
+
     public FolioReader setOnClosedListener(OnClosedListener onClosedListener) {
         this.onClosedListener = onClosedListener;
         return singleton;
@@ -275,6 +303,7 @@ public class FolioReader {
             singleton.onHighlightListener = null;
             singleton.readLocatorListener = null;
             singleton.onClosedListener = null;
+            singleton.onSelectedListener = null;
         }
     }
 
@@ -296,6 +325,7 @@ public class FolioReader {
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(context);
         localBroadcastManager.unregisterReceiver(highlightReceiver);
         localBroadcastManager.unregisterReceiver(readLocatorReceiver);
+        localBroadcastManager.unregisterReceiver(selectedText);
         localBroadcastManager.unregisterReceiver(closedReceiver);
     }
 }

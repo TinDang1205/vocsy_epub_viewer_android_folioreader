@@ -853,6 +853,12 @@ class FolioPageFragment(private var pageViewModel: PageTrackerViewModel) : Fragm
         }
     }
 
+    fun selectedText(selectedText: String) {
+        val intent = Intent(FolioReader.EXTRA_TEXT_SELECTED)
+        intent.putExtra(FolioReader.EXTRA_TEXT_SELECTED, selectedText)
+        LocalBroadcastManager.getInstance(context!!).sendBroadcast(intent)
+    }
+
     override fun resetCurrentIndex() {
         if (isCurrentFragment) {
             mWebview!!.loadUrl("javascript:rewindCurrentIndex()")

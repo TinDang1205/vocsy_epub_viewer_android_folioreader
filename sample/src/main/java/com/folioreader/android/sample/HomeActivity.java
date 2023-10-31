@@ -44,7 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HomeActivity extends AppCompatActivity
-        implements OnHighlightListener, ReadLocatorListener, FolioReader.OnClosedListener {
+        implements OnHighlightListener, ReadLocatorListener, FolioReader.OnClosedListener, FolioReader.OnSelectedListener {
 
     private static final String LOG_TAG = HomeActivity.class.getSimpleName();
     private FolioReader folioReader;
@@ -57,7 +57,8 @@ public class HomeActivity extends AppCompatActivity
         folioReader = FolioReader.get()
                 .setOnHighlightListener(this)
                 .setReadLocatorListener(this)
-                .setOnClosedListener(this);
+                .setOnClosedListener(this)
+                .setOnSelectedListener(this);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getHighlightsAndSave();
@@ -88,21 +89,13 @@ public class HomeActivity extends AppCompatActivity
                 config.setAllowedDirection(Config.AllowedDirection.VERTICAL_AND_HORIZONTAL);
                 config.setNightThemeColorInt(Color.parseColor("#FFFFFF"));
                 config.setShowRemainingIndicator(true);
-                config.setShowTextSelection(false);
+                config.setShowTextSelection(true);
 
                 folioReader.setReadLocator(readLocator);
                 folioReader.setConfig(config, true)
-                        .openBook("file:///android_asset/john.epub");
+                        .openBook("file:///android_asset/TheSilverChair.epub");
             }
         });
-
-        Config config = AppUtil.getSavedConfig(getApplicationContext());
-        if (config == null)
-            config = new Config();
-        config.setAllowedDirection(Config.AllowedDirection.VERTICAL_AND_HORIZONTAL);
-
-        folioReader.setConfig(config, true)
-                .openBook(R.raw.accessible_epub_3);
     }
 
     private ReadLocator getLastReadLocator() {
@@ -194,5 +187,10 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onFolioReaderClosed() {
         Log.v(LOG_TAG, "-> onFolioReaderClosed");
+    }
+
+    @Override
+    public void onSelectedListener(String data) {
+        Log.v(LOG_TAG, data);
     }
 }

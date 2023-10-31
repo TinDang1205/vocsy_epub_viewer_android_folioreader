@@ -360,7 +360,10 @@ class FolioWebView : WebView {
             }
             R.id.defineSelection -> {
                 Log.v(LOG_TAG, "-> onTextSelectionItemClicked -> defineSelection -> $selectedText")
-                uiHandler.post { showDictDialog(selectedText) }
+                if (selectedText != null) {
+                    parentFragment.selectedText(selectedText)
+                }
+//                uiHandler.post { showDictDialog(selectedText) }
             }
             else -> {
                 Log.w(LOG_TAG, "-> onTextSelectionItemClicked -> unknown id = $id")
