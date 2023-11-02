@@ -17,6 +17,8 @@ package com.folioreader.android.sample;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -42,6 +44,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class HomeActivity extends AppCompatActivity
         implements OnHighlightListener, ReadLocatorListener, FolioReader.OnClosedListener, FolioReader.OnSelectedListener {
@@ -94,6 +98,7 @@ public class HomeActivity extends AppCompatActivity
                 folioReader.setReadLocator(readLocator);
                 folioReader.setConfig(config, true)
                         .openBook("file:///android_asset/TheSilverChair.epub");
+
             }
         });
     }
@@ -192,5 +197,14 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onSelectedListener(String data) {
         Log.v(LOG_TAG, data);
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                folioReader.loadUrlOpenAI("https://cdn.pixabay.com/photo/2015/03/10/17/23/youtube-667451_1280.png");
+            }
+        }, 3000);
+
+
     }
 }

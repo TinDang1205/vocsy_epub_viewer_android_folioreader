@@ -33,6 +33,7 @@ import com.folioreader.ui.activity.FolioActivity
 import com.folioreader.ui.activity.FolioActivityCallback
 import com.folioreader.ui.fragment.DictionaryFragment
 import com.folioreader.ui.fragment.FolioPageFragment
+import com.folioreader.ui.fragment.OpenAIFragment
 import com.folioreader.util.AppUtil
 import com.folioreader.util.HighlightUtil
 import com.folioreader.util.UiUtil
@@ -61,18 +62,22 @@ class FolioWebView : WebView {
                     Log.v(LOG_TAG, msg)
                     return true
                 }
+
                 ConsoleMessage.MessageLevel.DEBUG, ConsoleMessage.MessageLevel.TIP -> {
                     Log.d(LOG_TAG, msg)
                     return true
                 }
+
                 ConsoleMessage.MessageLevel.WARNING -> {
                     Log.w(LOG_TAG, msg)
                     return true
                 }
+
                 ConsoleMessage.MessageLevel.ERROR -> {
                     Log.e(LOG_TAG, msg)
                     return true
                 }
+
                 else -> return false
             }
         }
@@ -109,6 +114,7 @@ class FolioWebView : WebView {
     private var calculatedProgress = 0.0
 
     private var lastScrollType: LastScrollType? = null
+    private var openAIFragment: OpenAIFragment? = null
 
     val contentHeightVal: Int
         get() = floor((this.contentHeight * this.scale).toDouble()).toInt()
@@ -213,7 +219,7 @@ class FolioWebView : WebView {
             uiHandler.post { popupWindow.dismiss() }
         }
         selectionRect = Rect()
-        if(isScrollingRunnable!=null){
+        if (isScrollingRunnable != null) {
             uiHandler.removeCallbacks(isScrollingRunnable!!)
         }
         isScrollingCheckDuration = 0
@@ -237,7 +243,8 @@ class FolioWebView : WebView {
         ): Boolean {
 //            Log.v(LOG_TAG, "-> onScroll -> e1 = " + e1 + ", e2 = " + e2 + ", distanceX = " + distanceX + ", distanceY = " + distanceY);
             parentFragment.mWebview?.let { wv ->
-                calculatedProgress = (wv.scrollY.toDouble() / wv.contentHeightVal.toDouble()) * 100.0
+                calculatedProgress =
+                    (wv.scrollY.toDouble() / wv.contentHeightVal.toDouble()) * 100.0
 //                val fmtProgress = "%.2f".format(calculatedProgress)
 //                println("VProgress: $fmtProgress%")
             }
@@ -354,31 +361,49 @@ class FolioWebView : WebView {
                 Toast.makeText(context, context.getString(R.string.copied), Toast.LENGTH_SHORT)
                     .show()
             }
+
             R.id.shareSelection -> {
                 Log.v(LOG_TAG, "-> onTextSelectionItemClicked -> shareSelection -> $selectedText")
                 UiUtil.share(context, selectedText)
             }
+
             R.id.defineSelection -> {
                 Log.v(LOG_TAG, "-> onTextSelectionItemClicked -> defineSelection -> $selectedText")
                 if (selectedText != null) {
                     parentFragment.selectedText(selectedText)
                 }
-//                uiHandler.post { showDictDialog(selectedText) }
+                uiHandler.post { showDictDialogOpenAI(url) }
             }
+
             else -> {
                 Log.w(LOG_TAG, "-> onTextSelectionItemClicked -> unknown id = $id")
             }
         }
     }
 
+    fun onShowDialogImageOpenAI(url: String?) {
+        openAIFragment?.onOpenAIDataReceived(url)
+    }
+
     private fun showDictDialog(selectedText: String?) {
-        val dictionaryFragment = DictionaryFragment()
+        val dictionaryFragment = OpenAIFragment()
         val bundle = Bundle()
         bundle.putString(Constants.SELECTED_WORD, selectedText?.trim())
         dictionaryFragment.arguments = bundle
         dictionaryFragment.show(
             parentFragment.fragmentManager!!,
             DictionaryFragment::class.java.name
+        )
+    }
+
+    private fun showDictDialogOpenAI(url: String?) {
+        openAIFragment = OpenAIFragment()
+        val bundle = Bundle()
+        bundle.putString(Constants.URL_IMAGE_OPEN_AI, url)
+        openAIFragment!!.arguments = bundle
+        openAIFragment!!.show(
+            parentFragment.fragmentManager!!,
+            OpenAIFragment::class.java.name
         )
     }
 
@@ -737,7 +762,7 @@ class FolioWebView : WebView {
             Log.i(LOG_TAG, "-> currentSelectionRect doesn't intersects viewportRect")
             uiHandler.post {
                 popupWindow.dismiss()
-                if(isScrollingRunnable!=null){
+                if (isScrollingRunnable != null) {
                     uiHandler.removeCallbacks(isScrollingRunnable!!)
                 }
             }
@@ -824,7 +849,7 @@ class FolioWebView : WebView {
 
     private fun showTextSelectionPopup() {
         val config = AppUtil.getSavedConfig(context)!!
-        if(config.isShowTextSelection) {
+        if (config.isShowTextSelection) {
             Log.v(LOG_TAG, "-> showTextSelectionPopup")
             Log.d(LOG_TAG, "-> showTextSelectionPopup -> To be laid out popupRect -> $popupRect")
             popupWindow.dismiss()
@@ -832,7 +857,7 @@ class FolioWebView : WebView {
             oldScrollY = scrollY
 
             isScrollingRunnable = Runnable {
-                if(isScrollingRunnable!=null){
+                if (isScrollingRunnable != null) {
                     uiHandler.removeCallbacks(isScrollingRunnable!!)
                 }
                 val currentScrollX = scrollX
@@ -855,19 +880,21 @@ class FolioWebView : WebView {
                     oldScrollY = currentScrollY
                     isScrollingCheckDuration += IS_SCROLLING_CHECK_TIMER
                     if (isScrollingCheckDuration < IS_SCROLLING_CHECK_MAX_DURATION && !destroyed) {
-                        if(isScrollingRunnable!=null) {
-                            uiHandler.postDelayed(isScrollingRunnable!!,
-                                IS_SCROLLING_CHECK_TIMER.toLong())
+                        if (isScrollingRunnable != null) {
+                            uiHandler.postDelayed(
+                                isScrollingRunnable!!,
+                                IS_SCROLLING_CHECK_TIMER.toLong()
+                            )
                         }
                     }
                 }
             }
 
-            if(isScrollingRunnable!=null) {
+            if (isScrollingRunnable != null) {
                 uiHandler.removeCallbacks(isScrollingRunnable!!)
             }
             isScrollingCheckDuration = 0
-            if (!destroyed && isScrollingRunnable!=null) {
+            if (!destroyed && isScrollingRunnable != null) {
                 uiHandler.postDelayed(isScrollingRunnable!!, IS_SCROLLING_CHECK_TIMER.toLong())
             }
         } else {

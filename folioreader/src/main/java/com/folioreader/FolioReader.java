@@ -174,7 +174,13 @@ public class FolioReader {
         return singleton;
     }
 
-    public FolioReader openBook(int rawId, String bookId) {
+    public void loadUrlOpenAI(String url) {
+        Intent intent = new Intent(FolioActivity.ACTION_LOAD_URL);
+        intent.putExtra(FolioActivity.ACTION_LOAD_URL, url);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    public FolioReader openAIUrl(int rawId, String bookId) {
         Intent intent = getIntentFromUrl(null, rawId);
         intent.putExtra(EXTRA_BOOK_ID, bookId);
         context.startActivity(intent);

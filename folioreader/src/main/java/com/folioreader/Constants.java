@@ -21,6 +21,7 @@ public class Constants {
     public static final String DEFAULT_STREAMER_URL = LOCALHOST + ":" + DEFAULT_PORT_NUMBER + "/";
 
     public static final String SELECTED_WORD = "selected_word";
+    public static final String URL_IMAGE_OPEN_AI = "url_image_open_ai";
     public static final String DICTIONARY_BASE_URL = "https://api.pearson.com/v2/dictionaries/entries?headword=";
     public static final String WIKIPEDIA_API_URL = "https://en.wikipedia.org/w/api.php?action=opensearch&namespace=0&format=json&search=";
     public static final int FONT_ANDADA = 1;

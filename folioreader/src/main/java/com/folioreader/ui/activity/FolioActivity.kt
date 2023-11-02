@@ -143,6 +143,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         private const val BUNDLE_DISTRACTION_FREE_MODE = "BUNDLE_DISTRACTION_FREE_MODE"
         const val EXTRA_SEARCH_ITEM = "EXTRA_SEARCH_ITEM"
         const val ACTION_SEARCH_CLEAR = "ACTION_SEARCH_CLEAR"
+        const val ACTION_LOAD_URL = "ACTION_LOAD_URL"
         private const val HIGHLIGHT_ITEM = "highlight_item"
         private const val BOOKMARK_ITEM = "bookmark_item"
     }
@@ -187,6 +188,15 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             val action = intent.action ?: return
             when (action) {
                 ACTION_SEARCH_CLEAR -> clearSearchLocator()
+            }
+        }
+    }
+
+    private val loadImageReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val data = intent.getSerializableExtra(ACTION_LOAD_URL) as String?
+            if (data != null) {
+                loadImageOpenAI(data)
             }
         }
     }
@@ -975,6 +985,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         val localBroadcastManager = LocalBroadcastManager.getInstance(this)
         localBroadcastManager.unregisterReceiver(searchReceiver)
+        localBroadcastManager.unregisterReceiver(loadImageReceiver)
         localBroadcastManager.unregisterReceiver(closeBroadcastReceiver)
 
         if (r2StreamerServer != null) r2StreamerServer!!.stop()
@@ -1075,6 +1086,9 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
             searchReceiver, IntentFilter(ACTION_SEARCH_CLEAR)
+        )
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            loadImageReceiver, IntentFilter(ACTION_LOAD_URL)
         )
     }
 
@@ -1202,6 +1216,11 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
                 bundle?.putParcelable(FolioPageFragment.BUNDLE_SEARCH_LOCATOR, null)
             }
         }
+    }
+
+
+    private fun loadImageOpenAI(url: String) {
+        (currentFragment ?: return).loadUrlOpenAI(url)
     }
 
 }

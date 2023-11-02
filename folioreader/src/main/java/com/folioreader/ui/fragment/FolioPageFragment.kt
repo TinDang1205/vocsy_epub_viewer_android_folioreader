@@ -949,6 +949,10 @@ class FolioPageFragment(private var pageViewModel: PageTrackerViewModel) : Fragm
         }
     }
 
+    fun loadUrlOpenAI(url: String) {
+        mWebview!!.onShowDialogImageOpenAI(url)
+    }
+
     fun clearSearchLocator() {
         Log.v(LOG_TAG, "-> clearSearchLocator -> " + spineItem.href!!)
         mWebview!!.loadUrl(getString(R.string.callClearSelection))
